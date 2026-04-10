@@ -1,362 +1,239 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
 
-const HERO_IMG =
-  "https://cdn.poehali.dev/projects/b4941e3b-06ef-4de7-b454-0bb496345cc8/files/1d077ddf-8eaf-4677-ab73-53f67d702720.jpg";
+const UC_SM = "https://cdn.poehali.dev/projects/b4941e3b-06ef-4de7-b454-0bb496345cc8/files/4982bf10-d0d7-4dd8-8afd-3f79ce7d632c.jpg";
+const UC_LG = "https://cdn.poehali.dev/projects/b4941e3b-06ef-4de7-b454-0bb496345cc8/files/f89753a3-6aa7-4279-b2f4-41b9d1012084.jpg";
 
-interface Package {
+interface UCPackage {
   id: number;
-  name: string;
-  coins: number;
-  bonus: number;
+  uc: number;
   price: number;
-  popular?: boolean;
-  tag?: string;
+  size: "sm" | "md" | "lg";
 }
 
-const packages: Package[] = [
-  { id: 1, name: "Стартовый", coins: 300, bonus: 0, price: 149 },
-  { id: 2, name: "Боевой", coins: 600, bonus: 60, price: 279, tag: "ХИТ" },
-  { id: 3, name: "Элитный", coins: 1200, bonus: 180, price: 499, popular: true },
-  { id: 4, name: "Легенда", coins: 2500, bonus: 500, price: 949 },
-  { id: 5, name: "Командный", coins: 5000, bonus: 1500, price: 1799, tag: "ВЫГОДА" },
-  { id: 6, name: "Генерал", coins: 10000, bonus: 4000, price: 3299 },
+const ucPackages: UCPackage[] = [
+  { id: 1, uc: 60, price: 79, size: "sm" },
+  { id: 2, uc: 120, price: 158, size: "sm" },
+  { id: 3, uc: 325, price: 399, size: "sm" },
+  { id: 4, uc: 385, price: 489, size: "md" },
+  { id: 5, uc: 660, price: 799, size: "md" },
+  { id: 6, uc: 720, price: 899, size: "md" },
+  { id: 7, uc: 985, price: 1198, size: "lg" },
+  { id: 8, uc: 1320, price: 1598, size: "lg" },
+  { id: 9, uc: 1800, price: 1990, size: "lg" },
+  { id: 10, uc: 3850, price: 3999, size: "lg" },
+  { id: 11, uc: 8100, price: 7999, size: "lg" },
 ];
 
-type SortType = "default" | "price_asc" | "price_desc" | "coins_asc" | "coins_desc";
+type TabType = "uc" | "royalpass" | "items";
+type FilterType = "all" | "cheap" | "mid" | "top";
 
-const sortOptions: { value: SortType; label: string }[] = [
-  { value: "default", label: "По умолчанию" },
-  { value: "price_asc", label: "Цена: по возрастанию" },
-  { value: "price_desc", label: "Цена: по убыванию" },
-  { value: "coins_asc", label: "Монеты: меньше" },
-  { value: "coins_desc", label: "Монеты: больше" },
+const tabs = [
+  { id: "uc" as TabType, label: "UC", emoji: "🪙" },
+  { id: "royalpass" as TabType, label: "Royal Pass", emoji: "👑" },
+  { id: "items" as TabType, label: "Анонсы", emoji: "🎁" },
+];
+
+const banners = [
+  "Снижение комиссии PUBG до 2% 🎮",
+  "Бонус +10% UC на первую покупку 🎁",
+  "Мгновенное зачисление на аккаунт ⚡",
 ];
 
 export default function Index() {
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 3500]);
-  const [coinsMin, setCoinsMin] = useState(0);
-  const [sort, setSort] = useState<SortType>("default");
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabType>("uc");
+  const [filter, setFilter] = useState<FilterType>("all");
+  const [bannerIdx, setBannerIdx] = useState(0);
+  const [maxPrice, setMaxPrice] = useState(8000);
 
-  const filtered = packages
-    .filter(
-      (p) =>
-        p.price >= priceRange[0] &&
-        p.price <= priceRange[1] &&
-        p.coins + p.bonus >= coinsMin
-    )
-    .sort((a, b) => {
-      if (sort === "price_asc") return a.price - b.price;
-      if (sort === "price_desc") return b.price - a.price;
-      if (sort === "coins_asc") return a.coins - b.coins;
-      if (sort === "coins_desc") return b.coins - a.coins;
-      return a.id - b.id;
-    });
+  const filtered = ucPackages.filter((p) => {
+    if (filter === "cheap") return p.price <= 400;
+    if (filter === "mid") return p.price > 400 && p.price <= 1500;
+    if (filter === "top") return p.price > 1500;
+    return p.price <= maxPrice;
+  });
 
   return (
-    <div className="min-h-screen bg-[#0a0c10] font-oswald text-white">
-      {/* NAV */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-black/70 backdrop-blur-md border-b border-[#c8902a]/30">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <span className="text-2xl font-black tracking-widest text-[#f5c842] uppercase">
-            PUBG<span className="text-white">STORE</span>
-          </span>
-          <div className="flex items-center gap-4">
-            <a
-              href="#catalog"
-              className="text-sm text-gray-300 hover:text-[#f5c842] transition-colors uppercase tracking-wider"
-            >
-              Каталог
-            </a>
-            <button className="bg-[#f5c842] hover:bg-[#e0b030] text-black font-black px-5 py-2 text-sm uppercase tracking-wider transition-all hover:scale-105">
-              Войти
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      {/* HERO */}
-      <section className="relative pt-16 h-[520px] overflow-hidden">
-        <img
-          src={HERO_IMG}
-          alt="PUBG Store"
-          className="absolute inset-0 w-full h-full object-cover object-center"
+    <div className="min-h-screen bg-[#1a0a2e] font-oswald text-white overflow-x-hidden">
+      {/* Purple gradient background */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_#6b21a8_0%,_#1a0a2e_60%)]" />
+        <div
+          className="absolute inset-0 opacity-10"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C27B0' fill-opacity='0.3'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-[#0a0c10]" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0a0c10]/80 via-transparent to-[#0a0c10]/60" />
+      </div>
 
-        <div className="relative max-w-6xl mx-auto px-4 h-full flex flex-col justify-center">
-          <div className="max-w-xl">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="h-px w-8 bg-[#f5c842]" />
-              <span className="text-[#f5c842] text-xs uppercase tracking-[0.3em] font-bold">
-                Официальный магазин
-              </span>
+      <div className="relative z-10 max-w-md mx-auto min-h-screen flex flex-col">
+        {/* HEADER */}
+        <header className="px-3 pt-4 pb-2">
+          <div className="flex items-center justify-between mb-3">
+            <button className="flex items-center gap-1.5 text-white/60 text-sm hover:text-white transition-colors">
+              <Icon name="X" size={16} />
+              <span>Закрыть</span>
+            </button>
+            <span className="text-xl font-black tracking-widest text-white uppercase">
+              PUBG<span className="text-[#c026d3]">STORE</span>
+            </span>
+            <div className="flex items-center gap-3 text-white/60">
+              <Icon name="ChevronDown" size={18} />
+              <Icon name="MoreVertical" size={18} />
             </div>
-            <h1 className="text-5xl md:text-6xl font-black uppercase leading-none mb-4">
-              <span className="text-white">ПОПОЛНИ</span>
-              <br />
-              <span className="text-[#f5c842]">G-COINS</span>
-            </h1>
-            <p className="text-gray-300 text-lg mb-8 font-light">
-              Лучшие пакеты игровой валюты для PUBG. Мгновенное зачисление на аккаунт.
-            </p>
-            <a
-              href="#catalog"
-              className="inline-flex items-center gap-2 bg-[#f5c842] hover:bg-[#e0b030] text-black font-black px-8 py-3 uppercase tracking-wider text-sm transition-all hover:scale-105 hover:shadow-[0_0_30px_#f5c84250]"
-            >
-              <Icon name="ShoppingCart" size={18} />
-              Выбрать пакет
-            </a>
           </div>
-        </div>
 
-        {/* Stats strip */}
-        <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm border-t border-[#f5c842]/20">
-          <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-around">
-            {[
-              { icon: "Zap", val: "Мгновенно", label: "Зачисление" },
-              { icon: "Shield", val: "100%", label: "Безопасно" },
-              { icon: "Users", val: "50 000+", label: "Игроков" },
-            ].map((s) => (
-              <div key={s.label} className="flex items-center gap-2">
-                <Icon name={s.icon as any} size={18} className="text-[#f5c842]" />
-                <div className="text-left">
-                  <div className="text-[#f5c842] font-black text-sm leading-none">{s.val}</div>
-                  <div className="text-gray-400 text-xs uppercase tracking-wide">{s.label}</div>
-                </div>
-              </div>
+          {/* Tabs */}
+          <div className="flex gap-2 mb-3">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex-1 flex flex-col items-center gap-1 py-2.5 rounded-xl border-2 text-xs font-bold uppercase tracking-wide transition-all ${
+                  activeTab === tab.id
+                    ? "bg-[#7e22ce]/60 border-[#c026d3] text-white shadow-[0_0_14px_#c026d340]"
+                    : "bg-black/30 border-[#4a1a6e] text-white/50 hover:border-[#7e22ce]"
+                }`}
+              >
+                <span className="text-xl">{tab.emoji}</span>
+                <span>{tab.label}</span>
+              </button>
             ))}
           </div>
-        </div>
-      </section>
 
-      {/* CATALOG */}
-      <section id="catalog" className="max-w-6xl mx-auto px-4 py-12">
-        <div className="mb-8">
-          <h2 className="text-3xl font-black uppercase text-white">
-            Каталог <span className="text-[#f5c842]">пакетов</span>
-          </h2>
-          <p className="text-gray-500 text-sm mt-1">Найдено: {filtered.length} пакетов</p>
-        </div>
-
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* FILTERS SIDEBAR */}
-          <aside className="lg:w-64 shrink-0">
-            <div className="bg-[#111318] border border-[#f5c842]/20 p-5">
-              <button
-                className="lg:hidden w-full flex items-center justify-between text-[#f5c842] font-bold uppercase text-sm mb-3"
-                onClick={() => setFiltersOpen(!filtersOpen)}
-              >
-                <span className="flex items-center gap-2">
-                  <Icon name="SlidersHorizontal" size={16} />
-                  Фильтры
-                </span>
-                <Icon name={filtersOpen ? "ChevronUp" : "ChevronDown"} size={16} />
-              </button>
-
-              <div className={`${filtersOpen ? "block" : "hidden"} lg:block space-y-6`}>
-                {/* Sort */}
-                <div>
-                  <label className="block text-xs text-[#f5c842] uppercase tracking-widest font-bold mb-3">
-                    Сортировка
-                  </label>
-                  <div className="space-y-1">
-                    {sortOptions.map((opt) => (
-                      <button
-                        key={opt.value}
-                        onClick={() => setSort(opt.value)}
-                        className={`w-full text-left px-3 py-2 text-sm transition-all ${
-                          sort === opt.value
-                            ? "bg-[#f5c842] text-black font-bold"
-                            : "text-gray-400 hover:text-white hover:bg-white/5"
-                        }`}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Price range */}
-                <div>
-                  <label className="block text-xs text-[#f5c842] uppercase tracking-widest font-bold mb-3">
-                    Цена (₽)
-                  </label>
-                  <div className="flex gap-2 mb-3">
-                    <input
-                      type="number"
-                      value={priceRange[0]}
-                      onChange={(e) => setPriceRange([+e.target.value, priceRange[1]])}
-                      className="w-full bg-black border border-[#333] text-white px-2 py-1.5 text-sm focus:outline-none focus:border-[#f5c842]"
-                      placeholder="от"
-                    />
-                    <input
-                      type="number"
-                      value={priceRange[1]}
-                      onChange={(e) => setPriceRange([priceRange[0], +e.target.value])}
-                      className="w-full bg-black border border-[#333] text-white px-2 py-1.5 text-sm focus:outline-none focus:border-[#f5c842]"
-                      placeholder="до"
-                    />
-                  </div>
-                  <input
-                    type="range"
-                    min={0}
-                    max={3500}
-                    step={50}
-                    value={priceRange[1]}
-                    onChange={(e) => setPriceRange([priceRange[0], +e.target.value])}
-                    className="w-full accent-[#f5c842]"
-                  />
-                  <div className="flex justify-between text-xs text-gray-500 mt-1">
-                    <span>0 ₽</span>
-                    <span>3 500 ₽</span>
-                  </div>
-                </div>
-
-                {/* Min coins */}
-                <div>
-                  <label className="block text-xs text-[#f5c842] uppercase tracking-widest font-bold mb-3">
-                    Монет от
-                  </label>
-                  <div className="space-y-1">
-                    {[0, 500, 1000, 2000, 5000].map((v) => (
-                      <button
-                        key={v}
-                        onClick={() => setCoinsMin(v)}
-                        className={`w-full text-left px-3 py-2 text-sm transition-all ${
-                          coinsMin === v
-                            ? "bg-[#f5c842] text-black font-bold"
-                            : "text-gray-400 hover:text-white hover:bg-white/5"
-                        }`}
-                      >
-                        {v === 0 ? "Любое кол-во" : `${v.toLocaleString()}+ монет`}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
+          {/* Promo Banner */}
+          <div className="relative bg-gradient-to-r from-[#7e22ce] to-[#c026d3] rounded-2xl px-4 py-3 mb-1 overflow-hidden cursor-pointer">
+            <div
+              className="absolute inset-0 opacity-10"
+              style={{
+                background:
+                  "repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px)",
+              }}
+            />
+            <p className="relative text-white font-bold text-sm text-center">
+              {banners[bannerIdx]}
+            </p>
+            <div className="flex justify-center gap-1.5 mt-2">
+              {banners.map((_, i) => (
                 <button
-                  onClick={() => {
-                    setPriceRange([0, 3500]);
-                    setCoinsMin(0);
-                    setSort("default");
-                  }}
-                  className="w-full border border-[#f5c842]/40 text-[#f5c842] hover:bg-[#f5c842]/10 py-2 text-sm uppercase tracking-wider font-bold transition-all"
-                >
-                  Сбросить
-                </button>
-              </div>
+                  key={i}
+                  onClick={() => setBannerIdx(i)}
+                  className={`h-1.5 rounded-full transition-all ${
+                    i === bannerIdx ? "w-4 bg-white" : "w-1.5 bg-white/40"
+                  }`}
+                />
+              ))}
             </div>
-          </aside>
+          </div>
+        </header>
 
-          {/* PACKAGES GRID */}
-          <div className="flex-1">
-            {filtered.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-24 text-gray-500">
-                <Icon name="PackageX" size={48} className="mb-4 opacity-30" />
-                <p className="text-lg uppercase tracking-wider">Пакеты не найдены</p>
-                <p className="text-sm mt-2">Попробуйте изменить фильтры</p>
+        {/* FILTER CHIPS */}
+        <div className="px-3 py-2 flex gap-2 overflow-x-auto">
+          {[
+            { id: "all" as FilterType, label: "Все" },
+            { id: "cheap" as FilterType, label: "до 400 ₽" },
+            { id: "mid" as FilterType, label: "400–1500 ₽" },
+            { id: "top" as FilterType, label: "от 1500 ₽" },
+          ].map((f) => (
+            <button
+              key={f.id}
+              onClick={() => setFilter(f.id)}
+              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-bold uppercase border transition-all ${
+                filter === f.id
+                  ? "bg-[#c026d3] border-[#c026d3] text-white"
+                  : "bg-black/30 border-[#4a1a6e] text-white/50 hover:border-[#c026d3]"
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+          {filter === "all" && (
+            <div className="shrink-0 flex items-center gap-2 ml-1">
+              <span className="text-[11px] text-white/40 whitespace-nowrap">
+                до {maxPrice.toLocaleString()} ₽
+              </span>
+              <input
+                type="range"
+                min={100}
+                max={8000}
+                step={100}
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(+e.target.value)}
+                className="w-20 accent-[#c026d3]"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* CONTENT */}
+        <main className="flex-1 px-3 pb-24">
+          {activeTab === "uc" ? (
+            filtered.length === 0 ? (
+              <div className="flex flex-col items-center py-16 text-white/30">
+                <Icon name="PackageX" size={40} className="mb-3" />
+                <p className="text-sm uppercase tracking-wider">Не найдено</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                {filtered.map((pkg, i) => (
-                  <PackageCard key={pkg.id} pkg={pkg} index={i} />
+              <div className="grid grid-cols-3 gap-2">
+                {filtered.map((pkg) => (
+                  <UCCard key={pkg.id} pkg={pkg} />
                 ))}
               </div>
-            )}
-          </div>
-        </div>
-      </section>
+            )
+          ) : (
+            <div className="flex flex-col items-center py-20 text-white/30">
+              <span className="text-5xl mb-4">
+                {activeTab === "royalpass" ? "👑" : "🎁"}
+              </span>
+              <p className="text-sm uppercase tracking-wider">Скоро</p>
+            </div>
+          )}
+        </main>
 
-      {/* FOOTER */}
-      <footer className="border-t border-[#f5c842]/10 mt-8">
-        <div className="max-w-6xl mx-auto px-4 py-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <span className="text-2xl font-black tracking-widest text-[#f5c842] uppercase">
-            PUBG<span className="text-white">STORE</span>
-          </span>
-          <p className="text-gray-600 text-sm">
-            © 2026 PUBGStore — неофициальный магазин игровой валюты
-          </p>
+        {/* BOTTOM NAVIGATION */}
+        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-[#0f0520]/95 backdrop-blur border-t border-[#4a1a6e] px-3 py-2 flex items-center justify-around z-20">
+          {[
+            { icon: "🪙", label: "UC", tab: "uc" as TabType },
+            { icon: "👑", label: "Pass", tab: "royalpass" as TabType },
+            { icon: "🎁", label: "Анонсы", tab: "items" as TabType },
+          ].map((b) => (
+            <button
+              key={b.tab}
+              onClick={() => setActiveTab(b.tab)}
+              className={`flex flex-col items-center gap-0.5 px-4 py-1 transition-all ${
+                activeTab === b.tab ? "opacity-100" : "opacity-40"
+              }`}
+            >
+              <span className="text-xl">{b.icon}</span>
+              <span className="text-[10px] uppercase tracking-wide text-white">
+                {b.label}
+              </span>
+              {activeTab === b.tab && (
+                <span className="w-1 h-1 rounded-full bg-[#c026d3]" />
+              )}
+            </button>
+          ))}
         </div>
-      </footer>
+      </div>
     </div>
   );
 }
 
-function PackageCard({ pkg, index }: { pkg: Package; index: number }) {
-  const totalCoins = pkg.coins + pkg.bonus;
+function UCCard({ pkg }: { pkg: UCPackage }) {
+  const img = pkg.size === "sm" ? UC_SM : UC_LG;
 
   return (
-    <div
-      className={`relative group bg-[#111318] border transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_40px_#f5c84222] ${
-        pkg.popular
-          ? "border-[#f5c842]"
-          : "border-[#1e2128] hover:border-[#f5c842]/50"
-      }`}
-      style={{ animationDelay: `${index * 60}ms` }}
-    >
-      {pkg.popular && (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#f5c842] text-black text-xs font-black px-4 py-1 uppercase tracking-wider whitespace-nowrap">
-          ХИТ ПРОДАЖ
-        </div>
-      )}
-      {pkg.tag && !pkg.popular && (
-        <div className="absolute -top-3 left-4 bg-[#e84040] text-white text-xs font-black px-3 py-1 uppercase tracking-wider">
-          {pkg.tag}
-        </div>
-      )}
-
-      <div className="p-5">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-[#f5c842]/10 border border-[#f5c842]/30 flex items-center justify-center">
-              <span className="text-xl">🪙</span>
-            </div>
-            <div>
-              <div className="text-xs text-gray-500 uppercase tracking-wider">Пакет</div>
-              <div className="text-white font-black uppercase tracking-wide">{pkg.name}</div>
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-2xl font-black text-[#f5c842]">
-              {pkg.price.toLocaleString()} ₽
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-black/40 p-3 mb-4 space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-400">Основные монеты</span>
-            <span className="text-white font-bold">{pkg.coins.toLocaleString()}</span>
-          </div>
-          {pkg.bonus > 0 && (
-            <div className="flex justify-between text-sm">
-              <span className="text-green-400">+ Бонус</span>
-              <span className="text-green-400 font-bold">+{pkg.bonus.toLocaleString()}</span>
-            </div>
-          )}
-          <div className="border-t border-[#333] pt-2 flex justify-between">
-            <span className="text-[#f5c842] text-xs uppercase tracking-wide font-bold">Итого монет</span>
-            <span className="text-[#f5c842] font-black">{totalCoins.toLocaleString()}</span>
-          </div>
-        </div>
-
-        <div className="text-xs text-gray-600 mb-4 text-right">
-          {(pkg.price / totalCoins).toFixed(2)} ₽ за монету
-        </div>
-
-        <button
-          className={`w-full py-3 font-black uppercase tracking-wider text-sm transition-all ${
-            pkg.popular
-              ? "bg-[#f5c842] text-black hover:bg-[#e0b030] hover:shadow-[0_0_20px_#f5c84240]"
-              : "bg-[#1e2128] text-white hover:bg-[#f5c842] hover:text-black"
-          }`}
-        >
-          Купить сейчас
-        </button>
+    <button className="group flex flex-col items-center bg-[#2d1052]/70 border border-[#4a1a6e] rounded-2xl p-2 hover:border-[#c026d3] hover:bg-[#3b1468]/80 transition-all active:scale-95 hover:shadow-[0_0_16px_#c026d330]">
+      <div className="w-full aspect-square rounded-xl overflow-hidden mb-2 bg-black/30">
+        <img
+          src={img}
+          alt={`${pkg.uc} UC`}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+        />
       </div>
-    </div>
+      <span className="text-white font-black text-[11px] text-center leading-tight">
+        {pkg.uc} UC — {pkg.price} ₽
+      </span>
+    </button>
   );
 }
